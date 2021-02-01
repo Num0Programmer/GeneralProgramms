@@ -102,11 +102,11 @@ public class PlayerController : MonoBehaviour
         // Adds drag in the opposite direction of movement
         if ((Mathf.Abs(xMag) > magThreshold) && ((Mathf.Abs(x) < 0.05f) || (x < 0) || (x > 0)))
         {
-            body.AddForce(transform.right * -drag * xMag);
+            body.AddForce(transform.right * -drag * xMag * counter, ForceMode.Force);
         }
         if ((Mathf.Abs(zMag) > magThreshold) && ((Mathf.Abs(z) < 0.05f) || (z < 0) || (z > 0)))
         {
-            body.AddForce(transform.forward * -drag * zMag);
+            body.AddForce(transform.forward * -drag * zMag * counter, ForceMode.Force);
         }
     }
 
