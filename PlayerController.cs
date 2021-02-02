@@ -16,8 +16,14 @@ public class PlayerController : MonoBehaviour
 
     public float jumpForce = 10.0f;
 
-    // Diection and heading
+    // Diection
     Vector3 direction = Vector3.zero;
+    
+    // Heading
+    float camY;
+    float sensitivity = 100.0f;
+
+    Vector3 rotX = Vector3.zero;
 
     // Inputs
     float x, z;
@@ -73,6 +79,9 @@ public class PlayerController : MonoBehaviour
         // Creates a 3D direction from x and z
         direction = transform.forward * z + transform.right * x;
         direction.Normalize();
+        
+        // Rotation
+        rotX = new Vector3(0, Input.GetAxis("Mouse X"), 0);
     }
 
     private void Movement()
@@ -80,8 +89,12 @@ public class PlayerController : MonoBehaviour
         // Makes the player jump
         if (jump && grounded) Jump();
 
-        // Moves the player object
+        // Moves the player object around the world space
         body.AddForce(direction * moveForce, ForceMode.VelocityChange);
+
+        // Rotates the player
+        Quaternion look = Quaternion.Euler(rotX * sensitivity * Time.fixedDeltaTime);
+        body.MoveRotation(transform.rotation * look);
 
         // Slows the player
         ApplyDrag();
