@@ -2,9 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// NOTES:
-// Use this model for Runni Boi. It encourages 
-
 public class PlayerController : MonoBehaviour
 {
     // Components and Assignables
@@ -13,11 +10,11 @@ public class PlayerController : MonoBehaviour
     public Transform groundCheck;
 
     // Movement
-    float moveForce = 30.0f;
+    public float moveForce = 30.0f;
     float magThreshold = 0.02f;
     float xMag, zMag;
 
-    float jumpForce = 10.0f;
+    public float jumpForce = 10.0f;
 
     // Diection and heading
     Vector3 direction = Vector3.zero;
@@ -33,7 +30,7 @@ public class PlayerController : MonoBehaviour
     float groundCheckRadius = 0.2f;
 
     // Movement Restricting var(s)
-    float maxMag = 20.0f;
+    public float maxMag = 20.0f;
     float drag = 10.0f;
     float angularDrag = 10.05f;
 
@@ -109,12 +106,4 @@ public class PlayerController : MonoBehaviour
             body.AddForce(transform.forward * -drag * zMag * counter, ForceMode.Force);
         }
     }
-
-    /*
-    private void OnDrawGizmos()
-    {
-        Gizmos.color = Color.cyan;
-        Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
-    }
-    */
 }
