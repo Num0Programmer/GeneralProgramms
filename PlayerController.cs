@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// NOTES: Use Rigidbody.movePosition() instead of Rigidbody.addForce() to side-step all the extra manipulations.
+
 public class PlayerController : MonoBehaviour
 {
     // Components and Assignables
