@@ -6,51 +6,49 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+    // NOTES: 
+    //        * The math in the FindVelocity is code I found on YouTube when looking for videos on how Quake's movement worked. I don't remember the video, but I
+    //          am sure the viewer of this code can find the exact code format I found. Otherwise, (when I remember) I will add the link to the specific video.
+    //        * The code (variable names, etc.) in the FindVelocity method is very similar to the code I found on YouTube; however, I changed the variable names,
+    //          so, hopefully, what is happening is easier for other - an myself - to better understand what is going on.
+
     // Components and Assignables
     public Rigidbody body;
-
     public Transform groundCheck;
+    public CapsuleCollider capsule;
 
-    // Movement
-    public float moveForce = 30.0f;
-    float magThreshold = 0.02f;
-    float xMag, zMag;
+    // Movement vars
+    float moveForce = 100.0f;
+    float jumpForce = 13.0f;
+    float termVelocity = 30.0f;
 
-    public float jumpForce = 10.0f;
+    Vector3 wishedDir;
 
-    // Diection
-    Vector3 direction = Vector3.zero;
-    
-    // Heading
-    float camY;
+    // Rotation vars
     float sensitivity = 100.0f;
 
-    Vector3 rotX = Vector3.zero;
-
     // Inputs
-    float x, z;
-    bool jump, grounded;
+    float x, z, mouseX;
+    bool jump, slide;
 
-    // Layers
+    // Ground checking
+    public float groundCheckRadius = 0.2f;
+    //bool grounded;
+
     public LayerMask groundMask;
 
-    // Dists to check
-    float groundCheckRadius = 0.2f;
-
-    // Movement Restricting var(s)
-    public float maxMag = 20.0f;
-    float drag = 10.0f;
-    float angularDrag = 10.05f;
-
-
-    private void Start()
+    private void Awake()
     {
         body = GetComponent<Rigidbody>();
+        capsule = GetComponent<CapsuleCollider>();
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     private void Update()
     {
-        GetInputs();
+        GetInputs();   
     }
 
     private void FixedUpdate()
@@ -60,46 +58,34 @@ public class PlayerController : MonoBehaviour
 
     private void GetInputs()
     {
-        // Checks for ground
-        grounded = Physics.CheckSphere(groundCheck.position, groundCheckRadius, groundMask);
+        float jumpMult = 0f;
 
-        // Collects inputs for movement
+        // Inputs : Movement
         x = Input.GetAxisRaw("Horizontal");
         z = Input.GetAxisRaw("Vertical");
         jump = Input.GetButton("Jump");
+        slide = Input.GetKeyDown(KeyCode.LeftShift);
 
-        // Takes care of player traveling faster than intended
-        if (z > 0 && body.velocity.z > maxMag) z = 0;
-        if (z < 0 && body.velocity.z < -maxMag) z = 0;
-        if (x > 0 && body.velocity.x > maxMag) x = 0;
-        if (x < 0 && body.velocity.x < -maxMag) x = 0;
+        if (jump) jumpMult = 1f;
 
-        // Finidng the magitudes of movement
-        xMag = body.velocity.x;
-        zMag = body.velocity.z;
+        // Creates the vector the player wishes to move along
+        wishedDir = transform.right * x + transform.forward * z + transform.up * jumpMult;
+        wishedDir.Normalize();
+        // NOTE: body.velocity = new Vector3(wishedDir.x * moveForce, wishedDir.y * jumpForce, wishedDir.z * moveForec);
 
-        // Creates a 3D direction from x and z
-        direction = transform.forward * z + transform.right * x;
-        direction.Normalize();
-        
-        // Rotation
-        rotX = new Vector3(0, Input.GetAxis("Mouse X"), 0);
+        // Inputs : Rotation
+        mouseX = Input.GetAxisRaw("Mouse X") * sensitivity;
     }
 
     private void Movement()
     {
-        // Makes the player jump
-        if (jump && grounded) Jump();
-
-        // Moves the player object around the world space
-        body.AddForce(direction * moveForce, ForceMode.VelocityChange);
-
         // Rotates the player
-        Quaternion look = Quaternion.Euler(rotX * sensitivity * Time.fixedDeltaTime);
-        body.MoveRotation(transform.rotation * look);
+        body.MoveRotation(transform.rotation * Quaternion.Euler(new Vector3(0, mouseX, 0) * Time.deltaTime));
 
-        // Slows the player
-        ApplyDrag();
+        if (Grounded() && jump) Jump();
+
+        // Moves player along their current velovity
+        body.velocity = FindVelocity(body.velocity, wishedDir);
     }
 
     private void Jump()
@@ -107,18 +93,26 @@ public class PlayerController : MonoBehaviour
         body.AddForce(transform.up * jumpForce, ForceMode.Impulse);
     }
 
-    // Physical operations
-    // This mathod taken, renamed and very slightly modified from Dani's CounterMovement method in his PlayerController.cs script
-    private void ApplyDrag()
+    // 
+    private Vector3 FindVelocity(Vector3 currVelocity, Vector3 wishedDir)
     {
-        // Adds drag in the opposite direction of movement
-        if ((Mathf.Abs(xMag) > magThreshold) && ((Mathf.Abs(x) < 0.05f) || (x < 0) || (x > 0)))
-        {
-            body.AddForce(transform.right * -drag * xMag * counter, ForceMode.Force);
-        }
-        if ((Mathf.Abs(zMag) > magThreshold) && ((Mathf.Abs(z) < 0.05f) || (z < 0) || (z > 0)))
-        {
-            body.AddForce(transform.forward * -drag * zMag * counter, ForceMode.Force);
-        }
+        float currSpeed = currVelocity.magnitude;
+
+        float speedToAdd = moveForce - currSpeed;
+        speedToAdd = Mathf.Max(Mathf.Min(speedToAdd, termVelocity * Time.deltaTime), 0);
+
+        return currVelocity + wishedDir * speedToAdd;
     }
-}
+
+    private bool Grounded()
+    {
+        return Physics.CheckSphere(groundCheck.position, groundCheckRadius, groundMask);
+    }
+
+    /*
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.blue;
+        Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
+    }
+    */}
