@@ -96,7 +96,7 @@ public class PlayerController : MonoBehaviour
     // 
     private Vector3 FindVelocity(Vector3 currVelocity, Vector3 wishedDir)
     {
-        float currSpeed = currVelocity.magnitude;
+        float currSpeed = Vector3.Dot(currVelocity, wishedDir);
 
         float speedToAdd = moveForce - currSpeed;
         speedToAdd = Mathf.Max(Mathf.Min(speedToAdd, termVelocity * Time.deltaTime), 0);
